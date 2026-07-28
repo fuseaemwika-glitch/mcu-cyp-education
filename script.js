@@ -1,13 +1,11 @@
 // ==================== CONFIG FIREBASE ====================
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBvSFA34Hab8psnXJUExO4pajga-13e5Cs",
-  authDomain: "mcu-cyp-education.firebaseapp.com",
-  projectId: "mcu-cyp-education",
-  storageBucket: "mcu-cyp-education.firebasestorage.app",
-  messagingSenderId: "547877876364",
-  appId: "1:547877876364:web:447cb02f7ec911ccf641a9",
-  measurementId: "G-5S3EYHL149"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
 // Initialize Firebase
@@ -26,9 +24,12 @@ let appData = {
     faqs: []
 };
 
-// Pagination State for News (3 cols x 2 rows = 6 items per page)
+// Pagination States
 let currentNewsPage = 1;
-const newsPerPage = 6;
+const newsPerPage = 6; // ข่าวประชาสัมพันธ์: 3 คอลัมน์ x 2 แถว = 6 รายการต่อหน้า
+
+let currentScholarshipPage = 1;
+const scholarshipPerPage = 15; // ทุนการศึกษา: 3 คอลัมน์ x 5 แถว = 15 รายการต่อหน้า
 
 let isAdminLoggedIn = false;
 
@@ -105,7 +106,7 @@ function initFirestoreListeners() {
         });
     });
 
-    // ข่าวประชาสัมพันธ์: เรียงลำดับ "ลงก่อนอยู่แรก" (Ascending ตามเวลาสร้าง)
+    // ข่าวประชาสัมพันธ์: เรียงลำดับ "ลงก่อนอยู่แรก" (Ascending)
     db.collection('news').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderNews();
@@ -116,6 +117,7 @@ function initFirestoreListeners() {
         });
     });
 
+    // ทุนการศึกษา: เรียงลำดับ "ลงก่อนอยู่แรก" (Ascending)
     db.collection('scholarships').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.scholarships = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderScholarships();
@@ -203,7 +205,6 @@ function renderNews() {
     const paginationContainer = document.getElementById('news-pagination');
     const adminList = document.getElementById('admin-news-list');
     
-    // คำนวณ Pagination สำหรับข่าว (6 รายการต่อหน้า = 3 คอลัมน์ x 2 แถว)
     const totalPages = Math.ceil(appData.news.length / newsPerPage) || 1;
     if (currentNewsPage > totalPages) currentNewsPage = totalPages;
 
@@ -222,7 +223,6 @@ function renderNews() {
         </div>
     `).join('');
 
-    // สร้าง Pagination Buttons สำหรับข่าว
     if (paginationContainer) {
         let paginationHTML = '';
         for (let i = 1; i <= totalPages; i++) {
@@ -268,9 +268,17 @@ function viewNewsDetail(id) {
 
 function renderScholarships() {
     const grid = document.getElementById('scholarship-grid');
+    const paginationContainer = document.getElementById('scholarship-pagination');
     const adminList = document.getElementById('admin-scholarship-list');
 
-    grid.innerHTML = appData.scholarships.map(item => `
+    // ทุนการศึกษา: 15 รายการต่อหน้า (3 คอลัมน์ x 5 แถว)
+    const totalPages = Math.ceil(appData.scholarships.length / scholarshipPerPage) || 1;
+    if (currentScholarshipPage > totalPages) currentScholarshipPage = totalPages;
+
+    const startIndex = (currentScholarshipPage - 1) * scholarshipPerPage;
+    const currentScholarshipItems = appData.scholarships.slice(startIndex, startIndex + scholarshipPerPage);
+
+    grid.innerHTML = currentScholarshipItems.map(item => `
         <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow transition flex flex-col text-xs">
             <img src="${item.image}" alt="${item.name}" class="w-full h-36 object-cover border-b border-gray-100">
             <div class="p-3.5 flex-grow flex flex-col justify-between">
@@ -283,6 +291,18 @@ function renderScholarships() {
             </div>
         </div>
     `).join('');
+
+    if (paginationContainer) {
+        let paginationHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+            paginationHTML += `
+                <button onclick="changeScholarshipPage(${i})" class="px-3 py-1 rounded text-xs font-semibold ${i === currentScholarshipPage ? 'bg-mcuRed text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}">
+                    ${i}
+                </button>
+            `;
+        }
+        paginationContainer.innerHTML = totalPages > 1 ? paginationHTML : '';
+    }
 
     if (adminList) {
         adminList.innerHTML = appData.scholarships.map(item => `
@@ -301,6 +321,11 @@ function renderScholarships() {
             </div>
         `).join('');
     }
+}
+
+function changeScholarshipPage(page) {
+    currentScholarshipPage = page;
+    renderScholarships();
 }
 
 function renderAdvisors() {
@@ -653,7 +678,6 @@ function handleCrudSubmit(e) {
     }
 
     if (!id) {
-        // เพิ่มฟิลด์ timestamp สำหรับการเรียงลำดับ "ลงก่อนอยู่แรก"
         dataToSave.createdAt = firebase.firestore.FieldValue.serverTimestamp();
     }
 
