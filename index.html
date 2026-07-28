@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กลุ่มงานบริการการศึกษา วิทยาลัยสงฆ์ชัยภูมิ มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mcuRed: '#800000',
+                        mcuGold: '#D4AF37',
+                        mcuPink: '#FF1493', // กลับมาใช้โทนสีเริ่มต้น
+                    },
+                    fontFamily: {
+                        prompt: ['Prompt', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchPage('home')">
+                    <div class="bg-mcuRed text-white p-3 rounded-full shadow-lg">
+                        <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg md:text-xl font-bold text-mcuRed">กลุ่มงานบริการการศึกษา</h1>
+                        <p class="text-xs text-gray-500">มจร. วิทยาลัยสงฆ์ชัยภูมิ</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Menu -->
+                <nav class="hidden md:flex space-x-6 items-center font-medium">
+                    <button onclick="switchPage('home')" class="nav-link text-mcuRed font-semibold hover:text-mcuRed transition">หน้าหลัก</button>
+                    <button onclick="switchPage('advisory')" class="nav-link text-gray-600 hover:text-mcuRed transition">บริการให้คำปรึกษา</button>
+                    <button onclick="switchPage('scholarship')" class="nav-link text-gray-600 hover:text-mcuRed transition">ทุนการศึกษา</button>
+                    <button onclick="switchPage('curriculum')" class="nav-link text-gray-600 hover:text-mcuRed transition">หลักสูตร</button>
+                    <button onclick="switchPage('contact')" class="nav-link text-gray-600 hover:text-mcuRed transition">ติดต่อเรา</button>
+                </nav>
+
+                <!-- Auth Status Button (Dynamic) -->
+                <div class="flex items-center space-x-3">
+                    <button id="auth-action-btn" onclick="handleAuthBtnClick()" class="bg-mcuRed hover:bg-red-900 text-white px-4 py-2 rounded-lg shadow transition flex items-center space-x-2 text-sm font-medium">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>ล็อกอินแอดมิน</span>
+                    </button>
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-gray-700 focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t px-4 pt-2 pb-4 space-y-2">
+            <button onclick="switchPage('home'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded hover:bg-gray-100 text-mcuRed font-semibold">หน้าหลัก</button>
+            <button onclick="switchPage('advisory'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded hover:bg-gray-100">บริการให้คำปรึกษา</button>
+            <button onclick="switchPage('scholarship'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded hover:bg-gray-100">ทุนการศึกษา</button>
+            <button onclick="switchPage('curriculum'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded hover:bg-gray-100">หลักสูตร</button>
+            <button onclick="switchPage('contact'); toggleMobileMenu();" class="block w-full text-left py-2 px-3 rounded hover:bg-gray-100">ติดต่อเรา</button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow">
+
+        <!-- ================= PAGE 1: หน้าหลัก (HOME) ================= -->
+        <section id="page-home" class="page-section py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <!-- Hero Banner -->
+                <div class="bg-gradient-to-r from-mcuRed to-red-900 rounded-2xl text-white p-8 shadow-xl flex flex-col md:flex-row items-center justify-between">
+                    <div class="space-y-4 mb-6 md:mb-0">
+                        <span class="bg-mcuGold text-gray-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">ยินดีต้อนรับ</span>
+                        <h2 class="text-3xl md:text-4xl font-bold">ระบบบริการการศึกษาออนไลน์</h2>
+                        <p class="text-gray-200 max-w-xl text-sm md:text-base">มุ่งมั่นพัฒนาการศึกษาวิถีพุทธ บูรณาการศาสนศาสตร์กับศาสตร์สมัยใหม่ เพื่อพัฒนาคุณธรรมและสังคม</p>
+                    </div>
+                    <div class="bg-white/10 p-6 rounded-xl backdrop-blur-md border border-white/20 text-center">
+                        <i class="fa-solid fa-university text-5xl text-mcuGold mb-2"></i>
+                        <p class="font-semibold text-lg">มจร. วิทยาลัยสงฆ์ชัยภูมิ</p>
+                    </div>
+                </div>
+
+                <!-- ส่วนบน (ระบบสารสนเทศหลัก) -->
+                <div>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center space-x-2 border-l-4 border-mcuPink pl-3">
+                            <span>ระบบสารสนเทศหลัก</span>
+                        </h3>
+                        <div id="admin-infosys-action" class="hidden">
+                            <button onclick="openInfoSysModal()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium shadow flex items-center space-x-1">
+                                <i class="fa-solid fa-plus"></i> <span>เพิ่มระบบสารสนเทศ</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="infosys-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- ส่วนกลาง (ข่าวประชาสัมพันธ์) -->
+                <div class="mt-12">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center space-x-2 border-l-4 border-mcuRed pl-3">
+                            <span>ข่าวประชาสัมพันธ์ล่าสุด</span>
+                        </h3>
+                        <div id="admin-news-action" class="hidden">
+                            <button onclick="openNewsModal()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium shadow flex items-center space-x-1">
+                                <i class="fa-solid fa-plus"></i> <span>เพิ่มข่าวสาร</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- ส่วนล่าง (สถิตินิสิตปัจจุบัน) -->
+                <div class="bg-white rounded-2xl p-8 shadow-md border border-gray-100 mt-12">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6 text-center">สถิตินิสิตปัจจุบันประจำปีการศึกษา</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div class="p-6 bg-red-50 rounded-xl border border-red-100">
+                            <div class="text-mcuRed text-3xl mb-2"><i class="fa-solid fa-dharmachakra"></i></div>
+                            <div class="text-4xl font-extrabold text-mcuRed counter" data-target="39">0</div>
+                            <p class="text-gray-700 font-semibold mt-2">พระพุทธศาสนา (รูป/คน)</p>
+                        </div>
+                        <div class="p-6 bg-amber-50 rounded-xl border border-amber-100">
+                            <div class="text-amber-600 text-3xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
+                            <div class="text-4xl font-extrabold text-amber-600 counter" data-target="58">0</div>
+                            <p class="text-gray-700 font-semibold mt-2">การจัดการเชิงพุทธ (รูป/คน)</p>
+                        </div>
+                        <div class="p-6 bg-blue-50 rounded-xl border border-blue-100">
+                            <div class="text-blue-600 text-3xl mb-2"><i class="fa-solid fa-scale-balanced"></i></div>
+                            <div class="text-4xl font-extrabold text-blue-600 counter" data-target="77">0</div>
+                            <p class="text-gray-700 font-semibold mt-2">รัฐศาสตร์ (รูป/คน)</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= PAGE: รายละเอียดข่าว (NEWS DETAIL) ================= -->
+        <section id="page-news-detail" class="page-section py-12 hidden">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                <button onclick="switchPage('home')" class="inline-flex items-center space-x-2 text-mcuRed font-semibold hover:underline">
+                    <i class="fa-solid fa-arrow-left"></i> <span>กลับหน้าหลัก</span>
+                </button>
+                <div class="bg-white rounded-2xl shadow-md p-8 space-y-6 border">
+                    <h2 id="detail-news-title" class="text-2xl md:text-3xl font-bold text-gray-900"></h2>
+                    <img id="detail-news-image" src="" alt="" class="w-full h-96 object-cover rounded-xl shadow">
+                    <div id="detail-news-content" class="text-gray-700 leading-relaxed space-y-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 2: หน้าบริการให้คำปรึกษา (ADVISORY) ================= -->
+        <section id="page-advisory" class="page-section py-8 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center max-w-2xl mx-auto">
+                    <h2 class="text-3xl font-bold text-mcuRed mb-2">บริการให้คำปรึกษาและแนะแนว</h2>
+                    <p class="text-gray-600 text-sm">ติดต่ออาจารย์ที่ปรึกษาและช่องทางการติดต่อสื่อสารต่างๆ ของกลุ่มงานบริการการศึกษา</p>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 border-l-4 border-mcuRed pl-3">ทำเนียบอาจารย์ผู้ให้คำปรึกษา</h3>
+                        <div id="admin-advisor-action" class="hidden">
+                            <button onclick="openAdvisorModal()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium shadow flex items-center space-x-1">
+                                <i class="fa-solid fa-plus"></i> <span>เพิ่มอาจารย์</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="advisors-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6"></div>
+                </div>
+                <div class="bg-white rounded-2xl p-8 shadow-md border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 border-l-4 border-mcuRed pl-3">ช่องทางการติดต่อ</h3>
+                        <div id="admin-contact-action" class="hidden">
+                            <button onclick="openContactModal()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium shadow flex items-center space-x-1">
+                                <i class="fa-solid fa-plus"></i> <span>เพิ่มช่องทางติดต่อ</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="contacts-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
+                <div class="bg-white rounded-2xl p-8 shadow-md border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 border-l-4 border-mcuRed pl-3">คำถามที่พบบ่อย (FAQ)</h3>
+                        <div id="admin-faq-action" class="hidden">
+                            <button onclick="openFaqModal()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-medium shadow flex items-center space-x-1">
+                                <i class="fa-solid fa-plus"></i> <span>เพิ่มคำถาม</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <tbody id="faq-table-body" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 3: หน้าทุนการศึกษา (SCHOLARSHIP) ================= -->
+        <section id="page-scholarship" class="page-section py-8 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <div class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-md border">
+                    <div>
+                        <h2 class="text-2xl font-bold text-mcuRed">ประกาศทุนการศึกษา</h2>
+                        <p class="text-gray-600 text-sm mt-1">รวมทุนการศึกษาสำหรับนิสิตวิทยาลัยสงฆ์ชัยภูมิ</p>
+                    </div>
+                    <div id="admin-scholarship-action" class="hidden mt-4 md:mt-0">
+                        <button onclick="openScholarshipModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i> <span>เพิ่มทุนการศึกษา</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="scholarship-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 4: หลักสูตร (CURRICULUM) ================= -->
+        <section id="page-curriculum" class="page-section py-12 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-md border">
+                    <div>
+                        <h2 class="text-3xl font-bold text-mcuRed">หลักสูตรที่เปิดสอน</h2>
+                        <p class="text-gray-600 text-sm mt-1">หลักสูตรระดับปริญญาตรี วิทยาลัยสงฆ์ชัยภูมิ</p>
+                    </div>
+                    <div id="admin-curriculum-action" class="hidden">
+                        <button onclick="openCurriculumModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i> <span>เพิ่มหลักสูตร</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="curriculums-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+            </div>
+        </section>
+
+        <!-- ================= PAGE 5: ติดต่อเรา (CONTACT) ================= -->
+        <section id="page-contact" class="page-section py-12 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-mcuRed mb-6 text-center">ติดต่อกลุ่มงานบริการการศึกษา</h2>
+                <div class="bg-white rounded-2xl shadow-md p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-bold text-gray-800">วิทยาลัยสงฆ์ชัยภูมิ</h3>
+                        <p class="text-gray-600 text-sm">เลขที่ 97 หมู่ที่ 14 บ้านโนนเหลี่ยม ตำบลนาฝาย อำเภอเมืองชัยภูมิ จังหวัดชัยภูมิ 36000</p>
+                        <p class="text-gray-600 text-sm"><strong class="text-gray-800">โทรศัพท์:</strong> 044-056022</p>
+                        <p class="text-gray-600 text-sm"><strong class="text-gray-800">อีเมล:</strong> cyp@mcu.ac.th</p>
+                        <p class="text-gray-600 text-sm"><strong class="text-gray-800">เวลาทำการ:</strong> จันทร์ - ศุกร์ (08:30 - 16:30 น.)</p>
+                    </div>
+                    <div>
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3835.6!2d102.0!3d16.3!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDE4JzAwLjAiTiAxMDLCsDAwJzAwLjAiRQ!5e0!3m2!1sth!2sth!4v1600000000000!5m2!1sth!2sth" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" class="rounded-xl shadow"></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= ADMIN DASHBOARD VIEW ================= -->
+        <section id="page-admin-dashboard" class="page-section py-8 hidden bg-gray-100 min-h-screen">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <div class="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-mcuRed">ระบบจัดการหลังบ้าน (Admin Dashboard)</h2>
+                        <p class="text-sm text-gray-500">จัดการข้อมูลสารสนเทศ ข่าวสาร ทุน อาจารย์ หลักสูตร และคำถาม</p>
+                    </div>
+                    <button onclick="adminLogout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center space-x-2">
+                        <i class="fa-solid fa-right-from-bracket"></i> <span>ออกจากระบบ</span>
+                    </button>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow">
+                    <div class="flex flex-wrap gap-2 border-b pb-4 mb-6">
+                        <button onclick="switchAdminTab('infosys')" id="tab-btn-infosys" class="font-semibold text-mcuRed border-b-2 border-mcuRed pb-2 px-3">ระบบสารสนเทศ</button>
+                        <button onclick="switchAdminTab('news')" id="tab-btn-news" class="text-gray-500 hover:text-mcuRed pb-2 px-3">ข่าวประชาสัมพันธ์</button>
+                        <button onclick="switchAdminTab('scholarship')" id="tab-btn-scholarship" class="text-gray-500 hover:text-mcuRed pb-2 px-3">ทุนการศึกษา</button>
+                        <button onclick="switchAdminTab('advisors')" id="tab-btn-advisors" class="text-gray-500 hover:text-mcuRed pb-2 px-3">ทำเนียบอาจารย์</button>
+                        <button onclick="switchAdminTab('contacts')" id="tab-btn-contacts" class="text-gray-500 hover:text-mcuRed pb-2 px-3">ช่องทางติดต่อ</button>
+                        <button onclick="switchAdminTab('curriculums')" id="tab-btn-curriculums" class="text-gray-500 hover:text-mcuRed pb-2 px-3">หลักสูตร</button>
+                        <button onclick="switchAdminTab('faq')" id="tab-btn-faq" class="text-gray-500 hover:text-mcuRed pb-2 px-3">FAQ</button>
+                    </div>
+
+                    <!-- Tab InfoSys -->
+                    <div id="admin-tab-infosys" class="space-y-4">
+                        <div class="flex justify-between items-center"><h3 class="font-bold text-lg">ระบบสารสนเทศหลัก</h3><button onclick="openInfoSysModal()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-plus"></i> เพิ่ม</button></div>
+                        <div id="admin-infosys-list" class="divide-y border rounded-lg overflow-hidden"></div>
+                    </div>
+                    <!-- Tab News -->
+                    <div id="admin-tab-news" class="space-y-4 hidden">
+                        <div class="flex justify-between items-center"><h3 class="font-bold text-lg">ข่าวประชาสัมพันธ์</h3><button onclick="openNewsModal()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-plus"></i> เพิ่มข่าว</button></div>
+                        <div id="admin-news-list" class="divide-y border rounded-lg overflow-hidden"></div>
+                    </div>
+                    <!-- Tab Scholarship -->
+                    <div id="admin-tab-scholarship" class="space-y-4 hidden">
+                        <div class="flex justify-between items-center"><h3 class="font-bold text-lg">ทุนการศึกษา</h3><button onclick="openScholarshipModal()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-plus"></i> เพิ่มทุน</button></div>
+                        <div id="admin-scholarship-list" class="divide-y border rounded-lg overflow-hidden"></div>
+                    </div>
+                    <!-- Tab Advisors -->
+                    <div id="admin-tab-advisors" class="space-y-4 hidden">
+                        <div class="flex justify-between items-center"><h3 class="font-bold text-lg">ทำเนียบอาจารย์</h3><button onclick="openAdvisorModal()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-plus"></i> เพิ่มอาจารย์</button></div>
+                        <div id="admin-advisors-list" class="divide-y border rounded-lg overflow-hidden"></div>
+                    </div>
+                    <!-- Tab Contacts -->
+                    <div id="admin-tab-contacts" class="space-y-4 hidden">
+                        <div class="flex justify-between items-center"><h3 class="font-bold text-lg">ช่องทางการติดต่อ</h3><button onclick="openContactModal()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-plus"></i> เพิ่มช่องทาง</button></div>
+                        <div id="admin-contacts-list" class="divide-y border rounded-lg overflow-hidden"></div>
+                    </div>
+                    <!-- Tab Curriculums -->
+                    <div id="admin-tab-curriculums" class="space-y-4 hidden">
+                        <div class="flex justify-between items-center"><h3 class="font-bold text-lg">หลักสูตรที่เปิดสอน</h3><button onclick="openCurriculumModal()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-plus"></i> เพิ่มหลักสูตร</button></div>
+                        <div id="admin-curriculums-list" class="divide-y border rounded-lg overflow-hidden"></div>
+                    </div>
+                    <!-- Tab FAQ -->
+                    <div id="admin-tab-faq" class="space-y-4 hidden">
+                        <div class="flex justify-between items-center"><h3 class="font-bold text-lg">คำถามที่พบบ่อย (FAQ)</h3><button onclick="openFaqModal()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm"><i class="fa-solid fa-plus"></i> เพิ่มคำถาม</button></div>
+                        <div id="admin-faq-list" class="divide-y border rounded-lg overflow-hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="bg-gray-900 text-gray-300 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="space-y-4 md:col-span-1">
+                    <h3 class="text-lg font-bold text-white border-l-4 border-mcuGold pl-3">กลุ่มงานบริการการศึกษา</h3>
+                    <p class="text-sm leading-relaxed">เลขที่ 97 หมู่ที่ 14 บ้านโนนเหลี่ยม ตำบลนาฝาย<br>อำเภอเมืองชัยภูมิ จังหวัดชัยภูมิ 36000</p>
+                    <p class="text-sm"><strong class="text-white">โทรศัพท์:</strong> 044-056022</p>
+                    <p class="text-sm"><strong class="text-white">อีเมล:</strong> cyp@mcu.ac.th</p>
+                </div>
+                <div class="md:col-span-2 space-y-4">
+                    <h3 class="text-lg font-bold text-white border-l-4 border-mcuGold pl-3">วิทยาลัยสงฆ์ชัยภูมิ มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย</h3>
+                    <div class="w-full h-48 rounded-xl overflow-hidden shadow-lg border border-gray-700">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3835.6!2d102.0!3d16.3!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDE4JzAwLjAiTiAxMDLCsDAwJzAwLjAiRQ!5e0!3m2!1sth!2sth!4v1600000000000!5m2!1sth!2sth" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-6 text-center text-xs text-gray-500">
+                &copy; 2026 กลุ่มงานบริการการศึกษา วิทยาลัยสงฆ์ชัยภูมิ มหาวิทยาลัยมหาจุฬาลงกรณราชวิทยาลัย. สงวนลิขสิทธิ์.
+            </div>
+        </div>
+    </footer>
+
+    <!-- ================= LOGIN MODAL ================= -->
+    <div id="login-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-mcuRed text-white rounded-full flex items-center justify-center mx-auto mb-2 text-xl shadow"><i class="fa-solid fa-lock"></i></div>
+                <h3 class="text-xl font-bold text-gray-900">ล็อกอินแอดมิน</h3>
+                <p class="text-xs text-gray-500">เข้าสู่ระบบด้วย Firebase Authentication</p>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">อีเมล (Email)</label>
+                    <input type="email" id="admin-email" required placeholder="admin@mcu.ac.th" class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-mcuRed focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">รหัสผ่าน (Password)</label>
+                    <input type="password" id="admin-password" required placeholder="******" class="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-mcuRed focus:outline-none">
+                </div>
+                <button type="submit" class="w-full bg-mcuRed hover:bg-red-900 text-white py-2.5 rounded-lg font-semibold shadow transition text-sm">เข้าสู่ระบบ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= CRUD MODAL ================= -->
+    <div id="crud-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeCrudModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            <h3 id="crud-modal-title" class="text-xl font-bold text-gray-900 mb-4">เพิ่มข้อมูล</h3>
+            <form id="crud-form" onsubmit="handleCrudSubmit(event)" class="space-y-4">
+                <input type="hidden" id="crud-type">
+                <input type="hidden" id="crud-id">
+                <div id="crud-form-fields" class="space-y-4"></div>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button type="button" onclick="closeCrudModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">ยกเลิก</button>
+                    <button type="submit" class="px-4 py-2 bg-mcuRed text-white rounded-lg text-sm font-medium shadow">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase App & Services CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Custom Script File -->
+    <script src="script.js"></script>
+</body>
+</html>
