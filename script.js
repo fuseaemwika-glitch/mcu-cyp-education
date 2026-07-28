@@ -9,6 +9,7 @@ const firebaseConfig = {
   appId: "1:547877876364:web:447cb02f7ec911ccf641a9",
   measurementId: "G-5S3EYHL149"
 };
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -33,6 +34,9 @@ let currentScholarshipPage = 1;
 const scholarshipPerPage = 15; // ทุนการศึกษา: 3 คอลัมน์ x 5 แถว = 15 รายการต่อหน้า
 
 let isAdminLoggedIn = false;
+
+// Drag and Drop state for News
+let draggedNewsId = null;
 
 // Navigation Switcher
 function switchPage(pageId) {
@@ -97,76 +101,78 @@ function seedDefaultDataIfNeeded() {
 
 // ==================== FETCH DATA FROM FIRESTORE ====================
 function initFirestoreListeners() {
-    db.collection('infosys').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-        appData.infosys = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderInfoSys();
-    }, () => {
-        db.collection('infosys').onSnapshot(snapshot => {
-            appData.infosys = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderInfoSys();
+    const collections = ['infosys', 'news', 'scholarships', 'advisors', 'contacts', 'curriculums', 'faqs'];
+
+    collections.forEach(colName => {
+        db.collection(colName).onSnapshot(snapshot => {
+            let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            items.sort((a, b) => {
+                if (colName === 'news') {
+                    // เรียงตามฟิลด์ order (ถ้ามี) หรือตามเวลาสร้างใหม่ล่าสุด
+                    if (a.order !== undefined && b.order !== undefined) {
+                        return a.order - b.order;
+                    }
+                    let timeA = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+                    let timeB = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+                    return timeB - timeA;
+                }
+                let timeA = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+                let timeB = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+                return timeA - timeB;
+            });
+
+            appData[colName] = items;
+
+            if (colName === 'infosys') renderInfoSys();
+            if (colName === 'news') renderNews();
+            if (colName === 'scholarships') renderScholarships();
+            if (colName === 'advisors') renderAdvisors();
+            if (colName === 'contacts') renderContacts();
+            if (colName === 'curriculums') renderCurriculums();
+            if (colName === 'faqs') renderFaqs();
+        }, error => {
+            console.error(`Error loading ${colName}:`, error);
         });
     });
+}
 
-    // ข่าวประชาสัมพันธ์: เรียงลำดับ "ลงก่อนอยู่แรก" (Ascending)
-    db.collection('news').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-        appData.news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+// ==================== DRAG AND DROP FUNCTIONS FOR NEWS ====================
+function handleNewsDragStart(e, id) {
+    draggedNewsId = id;
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleNewsDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleNewsDrop(e, targetId) {
+    e.preventDefault();
+    if (draggedNewsId === targetId) return;
+
+    const fromIndex = appData.news.findIndex(n => n.id === draggedNewsId);
+    const toIndex = appData.news.findIndex(n => n.id === targetId);
+
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    // ย้ายตำแหน่งใน Array ชั่วคราว
+    const movedItem = appData.news.splice(fromIndex, 1)[0];
+    appData.news.splice(toIndex, 0, movedItem);
+
+    // บันทึก order ใหม่ทั้งหมดลงใน Firestore Batch
+    const batch = db.batch();
+    appData.news.forEach((item, index) => {
+        const docRef = db.collection('news').doc(item.id);
+        batch.update(docRef, { order: index });
+        item.order = index;
+    });
+
+    batch.commit().then(() => {
         renderNews();
-    }, () => {
-        db.collection('news').onSnapshot(snapshot => {
-            appData.news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderNews();
-        });
-    });
-
-    // ทุนการศึกษา: เรียงลำดับ "ลงก่อนอยู่แรก" (Ascending)
-    db.collection('scholarships').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-        appData.scholarships = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderScholarships();
-    }, () => {
-        db.collection('scholarships').onSnapshot(snapshot => {
-            appData.scholarships = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderScholarships();
-        });
-    });
-
-    db.collection('advisors').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-        appData.advisors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderAdvisors();
-    }, () => {
-        db.collection('advisors').onSnapshot(snapshot => {
-            appData.advisors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderAdvisors();
-        });
-    });
-
-    db.collection('contacts').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-        appData.contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderContacts();
-    }, () => {
-        db.collection('contacts').onSnapshot(snapshot => {
-            appData.contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderContacts();
-        });
-    });
-
-    db.collection('curriculums').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-        appData.curriculums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderCurriculums();
-    }, () => {
-        db.collection('curriculums').onSnapshot(snapshot => {
-            appData.curriculums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderCurriculums();
-        });
-    });
-
-    db.collection('faqs').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-        appData.faqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderFaqs();
-    }, () => {
-        db.collection('faqs').onSnapshot(snapshot => {
-            appData.faqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderFaqs();
-        });
+    }).catch(err => {
+        console.error("Error updating news order: ", err);
     });
 }
 
@@ -174,6 +180,8 @@ function initFirestoreListeners() {
 function renderInfoSys() {
     const grid = document.getElementById('infosys-grid');
     const adminList = document.getElementById('admin-infosys-list');
+
+    if (!grid) return;
 
     grid.innerHTML = appData.infosys.map(item => `
         <a href="${item.link || '#'}" target="_blank" class="group bg-white p-5 rounded-xl border border-pink-100 shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5 flex flex-col items-center text-center">
@@ -206,6 +214,8 @@ function renderNews() {
     const paginationContainer = document.getElementById('news-pagination');
     const adminList = document.getElementById('admin-news-list');
     
+    if (!grid) return;
+
     const totalPages = Math.ceil(appData.news.length / newsPerPage) || 1;
     if (currentNewsPage > totalPages) currentNewsPage = totalPages;
 
@@ -237,13 +247,20 @@ function renderNews() {
     }
 
     if (adminList) {
-        adminList.innerHTML = appData.news.map(item => `
-            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
-                <div class="flex items-center space-x-2.5">
+        // เพิ่มคุณสมบัติ draggable และ event สำหรับลากจัดลำดับในหลังบ้าน
+        adminList.innerHTML = appData.news.map((item, index) => `
+            <div draggable="true" 
+                 ondragstart="handleNewsDragStart(event, '${item.id}')" 
+                 ondragover="handleNewsDragOver(event)" 
+                 ondrop="handleNewsDrop(event, '${item.id}')" 
+                 class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs cursor-move bg-white border-b select-none">
+                <div class="flex items-center space-x-2.5 pointer-events-none">
+                    <i class="fa-solid fa-grip-vertical text-gray-400"></i>
+                    <span class="text-gray-400 font-semibold w-5 text-right">${index + 1}.</span>
                     <img src="${item.image}" class="w-10 h-10 rounded object-cover">
                     <span class="font-medium text-gray-800 line-clamp-1">${item.title}</span>
                 </div>
-                <div class="space-x-1.5 flex-shrink-0">
+                <div class="space-x-1.5 flex-shrink-0" ondragstart="event.stopPropagation()">
                     <button onclick="openNewsModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
                     <button onclick="deleteItem('news', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
@@ -272,7 +289,8 @@ function renderScholarships() {
     const paginationContainer = document.getElementById('scholarship-pagination');
     const adminList = document.getElementById('admin-scholarship-list');
 
-    // ทุนการศึกษา: 15 รายการต่อหน้า (3 คอลัมน์ x 5 แถว)
+    if (!grid) return;
+
     const totalPages = Math.ceil(appData.scholarships.length / scholarshipPerPage) || 1;
     if (currentScholarshipPage > totalPages) currentScholarshipPage = totalPages;
 
@@ -333,6 +351,8 @@ function renderAdvisors() {
     const grid = document.getElementById('advisors-grid');
     const adminList = document.getElementById('admin-advisors-list');
 
+    if (!grid) return;
+
     grid.innerHTML = appData.advisors.map(adv => `
         <div class="bg-white p-3.5 rounded-xl shadow-sm border text-center hover:shadow transition">
             <img src="${adv.image}" alt="${adv.name}" class="w-16 h-16 rounded-full mx-auto object-cover mb-2 border-2 border-mcuRed">
@@ -364,6 +384,8 @@ function renderContacts() {
     const grid = document.getElementById('contacts-grid');
     const adminList = document.getElementById('admin-contacts-list');
 
+    if (!grid) return;
+
     grid.innerHTML = appData.contacts.map(c => `
         <a href="${c.link}" target="_blank" class="flex items-center space-x-3 p-3.5 bg-gray-50 rounded-xl hover:bg-red-50 transition border text-xs">
             <div class="w-10 h-10 ${c.color || 'bg-mcuRed'} text-white rounded-lg flex items-center justify-center text-base"><i class="fa-solid ${c.icon || 'fa-link'}"></i></div>
@@ -394,6 +416,8 @@ function renderCurriculums() {
     const grid = document.getElementById('curriculums-grid');
     const adminList = document.getElementById('admin-curriculums-list');
 
+    if (!grid) return;
+
     grid.innerHTML = appData.curriculums.map(item => `
         <div class="bg-white p-5 rounded-xl shadow-sm border-t-4 border-mcuRed text-xs">
             <h3 class="font-bold text-sm text-gray-900 mb-1.5">${item.name}</h3>
@@ -421,6 +445,8 @@ function renderCurriculums() {
 function renderFaqs() {
     const tbody = document.getElementById('faq-table-body');
     const adminList = document.getElementById('admin-faq-list');
+
+    if (!tbody) return;
 
     tbody.innerHTML = appData.faqs.map((faq, index) => `
         <tr class="hover:bg-gray-50">
@@ -680,6 +706,13 @@ function handleCrudSubmit(e) {
 
     if (!id) {
         dataToSave.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        if (type === 'news') {
+            // ข่าวใหม่จะถูกเซ็ตให้อยู่ลำดับแรกสุด (order: 0) อัตโนมัติ พร้อมเลื่อนข่าวเดิมลงมา
+            dataToSave.order = 0;
+            appData.news.forEach((item, index) => {
+                db.collection('news').doc(item.id).update({ order: index + 1 });
+            });
+        }
     }
 
     if (id) {
