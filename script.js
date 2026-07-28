@@ -26,6 +26,10 @@ let appData = {
     faqs: []
 };
 
+// Pagination State for News (3 cols x 2 rows = 6 items per page)
+let currentNewsPage = 1;
+const newsPerPage = 6;
+
 let isAdminLoggedIn = false;
 
 // Navigation Switcher
@@ -40,52 +44,49 @@ function toggleMobileMenu() {
     menu.classList.toggle('hidden');
 }
 
-// ==================== AUTO-SEED DEFAULT DATA (สร้างข้อมูลเริ่มต้นลง Firestore ให้แก้ไข/ลบได้จริง) ====================
+// ==================== AUTO-SEED DEFAULT DATA ====================
 function seedDefaultDataIfNeeded() {
-    // 1. ตรวจสอบและเพิ่มข้อมูลทำเนียบอาจารย์ 15 ท่าน
     db.collection('advisors').get().then(snapshot => {
         if (snapshot.empty) {
             for (let i = 1; i <= 15; i++) {
                 db.collection('advisors').add({
                     name: `รศ.ดร.พระมหาสมชาย ${i}`,
                     title: 'อาจารย์ประจำหลักสูตร',
-                    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=60'
+                    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=60',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
         }
     });
 
-    // 2. ตรวจสอบและเพิ่มหลักสูตร
     db.collection('curriculums').get().then(snapshot => {
         if (snapshot.empty) {
             const defaultCurriculums = [
-                { name: 'พุทธศาสตรบัณฑิต (พธ.บ.)', detail: 'สาขาวิชาพระพุทธศาสนา เน้นการศึกษาปริยัติธรรมและบูรณาการการเผยแผ่พระพุทธศาสนา', badge: 'ปริญญาตรี 4 ปี' },
-                { name: 'บริหารธุรกิจบัณฑิต (บธ.บ.)', detail: 'สาขาวิชาการจัดการเชิงพุทธ ประยุกต์หลักธรรมกับการบริหารจัดการธุรกิจสมัยใหม่', badge: 'ปริญญาตรี 4 ปี' },
-                { name: 'รัฐศาสตรบัณฑิต (ร.บ.)', detail: 'สาขาวิชารัฐศาสตร์ หลักสูตรการปกครองท้องถิ่นและการพัฒนาชุมชนตามแนวพุทธศาสตร์', badge: 'ปริญญาตรี 4 ปี' }
+                { name: 'พุทธศาสตรบัณฑิต (พธ.บ.)', detail: 'สาขาวิชาพระพุทธศาสนา เน้นการศึกษาปริยัติธรรมและบูรณาการการเผยแผ่พระพุทธศาสนา', badge: 'ปริญญาตรี 4 ปี', createdAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { name: 'บริหารธุรกิจบัณฑิต (บธ.บ.)', detail: 'สาขาวิชาการจัดการเชิงพุทธ ประยุกต์หลักธรรมกับการบริหารจัดการธุรกิจสมัยใหม่', badge: 'ปริญญาตรี 4 ปี', createdAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { name: 'รัฐศาสตรบัณฑิต (ร.บ.)', detail: 'สาขาวิชารัฐศาสตร์ หลักสูตรการปกครองท้องถิ่นและการพัฒนาชุมชนตามแนวพุทธศาสตร์', badge: 'ปริญญาตรี 4 ปี', createdAt: firebase.firestore.FieldValue.serverTimestamp() }
             ];
             defaultCurriculums.forEach(item => db.collection('curriculums').add(item));
         }
     });
 
-    // 3. ตรวจสอบและเพิ่มระบบสารสนเทศ
     db.collection('infosys').get().then(snapshot => {
         if (snapshot.empty) {
             const defaultInfosys = [
-                { title: 'ระบบบริการการศึกษา', desc: 'งานทะเบียนและผลการเรียน', link: '#', icon: 'fa-book-open-reader' },
-                { title: 'ระบบทุนเล่าเรียนหลวง', desc: 'ข้อมูลและตรวจสอบสถานะทุน', link: '#', icon: 'fa-award' },
-                { title: 'ระบบปฏิบัติศาสนกิจ', desc: 'บันทึกและติดตามผลศาสนกิจ', link: '#', icon: 'fa-om' }
+                { title: 'ระบบบริการการศึกษา', desc: 'งานทะเบียนและผลการเรียน', link: '#', icon: 'fa-book-open-reader', createdAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { title: 'ระบบทุนเล่าเรียนหลวง', desc: 'ข้อมูลและตรวจสอบสถานะทุน', link: '#', icon: 'fa-award', createdAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { title: 'ระบบปฏิบัติศาสนกิจ', desc: 'บันทึกและติดตามผลศาสนกิจ', link: '#', icon: 'fa-om', createdAt: firebase.firestore.FieldValue.serverTimestamp() }
             ];
             defaultInfosys.forEach(item => db.collection('infosys').add(item));
         }
     });
 
-    // 4. ตรวจสอบและเพิ่มช่องทางติดต่อ
     db.collection('contacts').get().then(snapshot => {
         if (snapshot.empty) {
             const defaultContacts = [
-                { title: 'เว็บไซต์หลัก', subtitle: 'cyp.mcu.ac.th', link: 'https://cyp.mcu.ac.th', icon: 'fa-globe', color: 'bg-mcuRed' },
-                { title: 'Facebook Page', subtitle: 'มจร.ชัยภูมิ', link: 'https://facebook.com', icon: 'fa-facebook-f', color: 'bg-blue-600' },
-                { title: 'Line Official', subtitle: '@mcu.cyp', link: 'https://line.me', icon: 'fa-line', color: 'bg-green-500' }
+                { title: 'เว็บไซต์หลัก', subtitle: 'cyp.mcu.ac.th', link: 'https://cyp.mcu.ac.th', icon: 'fa-globe', color: 'bg-mcuRed', createdAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { title: 'Facebook Page', subtitle: 'มจร.ชัยภูมิ', link: 'https://facebook.com', icon: 'fa-facebook-f', color: 'bg-blue-600', createdAt: firebase.firestore.FieldValue.serverTimestamp() },
+                { title: 'Line Official', subtitle: '@mcu.cyp', link: 'https://line.me', icon: 'fa-line', color: 'bg-green-500', createdAt: firebase.firestore.FieldValue.serverTimestamp() }
             ];
             defaultContacts.forEach(item => db.collection('contacts').add(item));
         }
@@ -94,39 +95,75 @@ function seedDefaultDataIfNeeded() {
 
 // ==================== FETCH DATA FROM FIRESTORE ====================
 function initFirestoreListeners() {
-    db.collection('infosys').onSnapshot(snapshot => {
+    db.collection('infosys').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.infosys = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderInfoSys();
+    }, () => {
+        db.collection('infosys').onSnapshot(snapshot => {
+            appData.infosys = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderInfoSys();
+        });
     });
 
-    db.collection('news').onSnapshot(snapshot => {
+    // ข่าวประชาสัมพันธ์: เรียงลำดับ "ลงก่อนอยู่แรก" (Ascending ตามเวลาสร้าง)
+    db.collection('news').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderNews();
+    }, () => {
+        db.collection('news').onSnapshot(snapshot => {
+            appData.news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderNews();
+        });
     });
 
-    db.collection('scholarships').onSnapshot(snapshot => {
+    db.collection('scholarships').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.scholarships = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderScholarships();
+    }, () => {
+        db.collection('scholarships').onSnapshot(snapshot => {
+            appData.scholarships = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderScholarships();
+        });
     });
 
-    db.collection('advisors').onSnapshot(snapshot => {
+    db.collection('advisors').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.advisors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderAdvisors();
+    }, () => {
+        db.collection('advisors').onSnapshot(snapshot => {
+            appData.advisors = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderAdvisors();
+        });
     });
 
-    db.collection('contacts').onSnapshot(snapshot => {
+    db.collection('contacts').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderContacts();
+    }, () => {
+        db.collection('contacts').onSnapshot(snapshot => {
+            appData.contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderContacts();
+        });
     });
 
-    db.collection('curriculums').onSnapshot(snapshot => {
+    db.collection('curriculums').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.curriculums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderCurriculums();
+    }, () => {
+        db.collection('curriculums').onSnapshot(snapshot => {
+            appData.curriculums = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderCurriculums();
+        });
     });
 
-    db.collection('faqs').onSnapshot(snapshot => {
+    db.collection('faqs').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
         appData.faqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderFaqs();
+    }, () => {
+        db.collection('faqs').onSnapshot(snapshot => {
+            appData.faqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderFaqs();
+        });
     });
 }
 
@@ -136,25 +173,25 @@ function renderInfoSys() {
     const adminList = document.getElementById('admin-infosys-list');
 
     grid.innerHTML = appData.infosys.map(item => `
-        <a href="${item.link || '#'}" target="_blank" class="group bg-white p-6 rounded-xl border-2 border-mcuPink shadow-md hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col items-center text-center">
-            <div class="w-14 h-14 bg-pink-100 text-mcuPink rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-mcuPink group-hover:text-white transition">
+        <a href="${item.link || '#'}" target="_blank" class="group bg-white p-5 rounded-xl border border-pink-100 shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5 flex flex-col items-center text-center">
+            <div class="w-12 h-12 bg-pink-50 text-mcuPink rounded-xl flex items-center justify-center text-xl mb-3 group-hover:bg-mcuPink group-hover:text-white transition">
                 <i class="fa-solid ${item.icon || 'fa-globe'}"></i>
             </div>
-            <h4 class="font-bold text-gray-800 text-lg group-hover:text-mcuPink transition">${item.title}</h4>
-            <p class="text-xs text-gray-500 mt-1">${item.desc || ''}</p>
+            <h4 class="font-bold text-gray-800 text-sm group-hover:text-mcuPink transition">${item.title}</h4>
+            <p class="text-[11px] text-gray-500 mt-0.5">${item.desc || ''}</p>
         </a>
     `).join('');
 
     if (adminList) {
         adminList.innerHTML = appData.infosys.map(item => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
                 <div>
-                    <span class="font-medium text-sm text-gray-800 block">${item.title}</span>
-                    <span class="text-xs text-gray-500">ลิงก์: ${item.link}</span>
+                    <span class="font-medium text-gray-800 block">${item.title}</span>
+                    <span class="text-[11px] text-gray-500">ลิงก์: ${item.link}</span>
                 </div>
-                <div class="space-x-2">
-                    <button onclick="openInfoSysModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm font-semibold">แก้ไข</button>
-                    <button onclick="deleteItem('infosys', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded text-sm font-semibold">ลบ</button>
+                <div class="space-x-1.5">
+                    <button onclick="openInfoSysModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
+                    <button onclick="deleteItem('infosys', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
             </div>
         `).join('');
@@ -163,34 +200,60 @@ function renderInfoSys() {
 
 function renderNews() {
     const grid = document.getElementById('news-grid');
+    const paginationContainer = document.getElementById('news-pagination');
     const adminList = document.getElementById('admin-news-list');
     
-    grid.innerHTML = appData.news.map(item => `
-        <div onclick="viewNewsDetail('${item.id}')" class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition cursor-pointer">
-            <img src="${item.image}" alt="${item.title}" class="w-full h-48 object-cover">
-            <div class="p-5">
-                <h4 class="font-bold text-gray-800 text-base mb-2 line-clamp-2">${item.title}</h4>
-                <span class="text-mcuRed text-sm font-semibold hover:underline flex items-center space-x-1">
-                    <span>อ่านรายละเอียด</span> <i class="fa-solid fa-arrow-right text-xs"></i>
+    // คำนวณ Pagination สำหรับข่าว (6 รายการต่อหน้า = 3 คอลัมน์ x 2 แถว)
+    const totalPages = Math.ceil(appData.news.length / newsPerPage) || 1;
+    if (currentNewsPage > totalPages) currentNewsPage = totalPages;
+
+    const startIndex = (currentNewsPage - 1) * newsPerPage;
+    const currentNewsItems = appData.news.slice(startIndex, startIndex + newsPerPage);
+
+    grid.innerHTML = currentNewsItems.map(item => `
+        <div onclick="viewNewsDetail('${item.id}')" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition cursor-pointer flex flex-col">
+            <img src="${item.image}" alt="${item.title}" class="w-full h-40 object-cover">
+            <div class="p-4 flex-grow flex flex-col justify-between">
+                <h4 class="font-bold text-gray-800 text-xs md:text-sm mb-2 line-clamp-2">${item.title}</h4>
+                <span class="text-mcuRed text-xs font-semibold hover:underline flex items-center space-x-1">
+                    <span>อ่านรายละเอียด</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </span>
             </div>
         </div>
     `).join('');
 
+    // สร้าง Pagination Buttons สำหรับข่าว
+    if (paginationContainer) {
+        let paginationHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+            paginationHTML += `
+                <button onclick="changeNewsPage(${i})" class="px-3 py-1 rounded text-xs font-semibold ${i === currentNewsPage ? 'bg-mcuRed text-white shadow' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}">
+                    ${i}
+                </button>
+            `;
+        }
+        paginationContainer.innerHTML = totalPages > 1 ? paginationHTML : '';
+    }
+
     if (adminList) {
         adminList.innerHTML = appData.news.map(item => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                <div class="flex items-center space-x-3">
-                    <img src="${item.image}" class="w-12 h-12 rounded object-cover">
-                    <span class="font-medium text-sm text-gray-800">${item.title}</span>
+            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
+                <div class="flex items-center space-x-2.5">
+                    <img src="${item.image}" class="w-10 h-10 rounded object-cover">
+                    <span class="font-medium text-gray-800 line-clamp-1">${item.title}</span>
                 </div>
-                <div class="space-x-2">
-                    <button onclick="openNewsModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm font-semibold">แก้ไข</button>
-                    <button onclick="deleteItem('news', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded text-sm font-semibold">ลบ</button>
+                <div class="space-x-1.5 flex-shrink-0">
+                    <button onclick="openNewsModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
+                    <button onclick="deleteItem('news', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
             </div>
         `).join('');
     }
+}
+
+function changeNewsPage(page) {
+    currentNewsPage = page;
+    renderNews();
 }
 
 function viewNewsDetail(id) {
@@ -208,32 +271,32 @@ function renderScholarships() {
     const adminList = document.getElementById('admin-scholarship-list');
 
     grid.innerHTML = appData.scholarships.map(item => `
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-300 hover:shadow-md transition flex flex-col">
-            <img src="${item.image}" alt="${item.name}" class="w-full h-40 object-cover border-b border-gray-200">
-            <div class="p-4 flex-grow flex flex-col justify-between">
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow transition flex flex-col text-xs">
+            <img src="${item.image}" alt="${item.name}" class="w-full h-36 object-cover border-b border-gray-100">
+            <div class="p-3.5 flex-grow flex flex-col justify-between">
                 <div>
-                    <span class="text-xs bg-red-50 text-mcuRed px-2.5 py-1 rounded-full font-semibold">${item.source}</span>
-                    <h4 class="font-bold text-gray-800 text-sm mt-2 line-clamp-2">${item.name}</h4>
-                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">${item.detail}</p>
+                    <span class="text-[10px] bg-red-50 text-mcuRed px-2 py-0.5 rounded-full font-semibold">${item.source}</span>
+                    <h4 class="font-bold text-gray-800 text-xs mt-1.5 line-clamp-2">${item.name}</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${item.detail}</p>
                 </div>
-                <a href="${item.link || '#'}" target="_blank" class="mt-4 w-full text-center bg-mcuRed/10 text-mcuRed hover:bg-mcuRed hover:text-white py-2 rounded-lg text-xs font-semibold transition block">รายละเอียดทุน</a>
+                <a href="${item.link || '#'}" target="_blank" class="mt-3 w-full text-center bg-mcuRed/10 text-mcuRed hover:bg-mcuRed hover:text-white py-1.5 rounded text-[11px] font-semibold transition block">รายละเอียดทุน</a>
             </div>
         </div>
     `).join('');
 
     if (adminList) {
         adminList.innerHTML = appData.scholarships.map(item => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                <div class="flex items-center space-x-3">
-                    <img src="${item.image}" class="w-12 h-12 rounded object-cover">
+            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
+                <div class="flex items-center space-x-2.5">
+                    <img src="${item.image}" class="w-10 h-10 rounded object-cover">
                     <div>
-                        <span class="font-medium text-sm text-gray-800 block">${item.name}</span>
-                        <span class="text-xs text-gray-500">${item.source}</span>
+                        <span class="font-medium text-gray-800 block">${item.name}</span>
+                        <span class="text-[11px] text-gray-500">${item.source}</span>
                     </div>
                 </div>
-                <div class="space-x-2">
-                    <button onclick="openScholarshipModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm font-semibold">แก้ไข</button>
-                    <button onclick="deleteItem('scholarships', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded text-sm font-semibold">ลบ</button>
+                <div class="space-x-1.5">
+                    <button onclick="openScholarshipModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
+                    <button onclick="deleteItem('scholarships', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
             </div>
         `).join('');
@@ -245,26 +308,26 @@ function renderAdvisors() {
     const adminList = document.getElementById('admin-advisors-list');
 
     grid.innerHTML = appData.advisors.map(adv => `
-        <div class="bg-white p-4 rounded-xl shadow-sm border text-center hover:shadow-md transition">
-            <img src="${adv.image}" alt="${adv.name}" class="w-20 h-20 rounded-full mx-auto object-cover mb-3 border-2 border-mcuRed">
-            <h4 class="font-bold text-sm text-gray-800">${adv.name}</h4>
-            <p class="text-xs text-gray-500 mt-1">${adv.title}</p>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border text-center hover:shadow transition">
+            <img src="${adv.image}" alt="${adv.name}" class="w-16 h-16 rounded-full mx-auto object-cover mb-2 border-2 border-mcuRed">
+            <h4 class="font-bold text-xs text-gray-800 line-clamp-1">${adv.name}</h4>
+            <p class="text-[10px] text-gray-500 mt-0.5 line-clamp-1">${adv.title}</p>
         </div>
     `).join('');
 
     if (adminList) {
         adminList.innerHTML = appData.advisors.map(adv => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
-                <div class="flex items-center space-x-3">
-                    <img src="${adv.image}" class="w-12 h-12 rounded-full object-cover">
+            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
+                <div class="flex items-center space-x-2.5">
+                    <img src="${adv.image}" class="w-10 h-10 rounded-full object-cover">
                     <div>
-                        <span class="font-medium text-sm text-gray-800 block">${adv.name}</span>
-                        <span class="text-xs text-gray-500">${adv.title}</span>
+                        <span class="font-medium text-gray-800 block">${adv.name}</span>
+                        <span class="text-[11px] text-gray-500">${adv.title}</span>
                     </div>
                 </div>
-                <div class="space-x-2">
-                    <button onclick="openAdvisorModal('${adv.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm font-semibold">แก้ไข</button>
-                    <button onclick="deleteItem('advisors', '${adv.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded text-sm font-semibold">ลบ</button>
+                <div class="space-x-1.5">
+                    <button onclick="openAdvisorModal('${adv.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
+                    <button onclick="deleteItem('advisors', '${adv.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
             </div>
         `).join('');
@@ -276,25 +339,25 @@ function renderContacts() {
     const adminList = document.getElementById('admin-contacts-list');
 
     grid.innerHTML = appData.contacts.map(c => `
-        <a href="${c.link}" target="_blank" class="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-red-50 transition border">
-            <div class="w-12 h-12 ${c.color || 'bg-mcuRed'} text-white rounded-lg flex items-center justify-center text-xl"><i class="fa-solid ${c.icon || 'fa-link'}"></i></div>
+        <a href="${c.link}" target="_blank" class="flex items-center space-x-3 p-3.5 bg-gray-50 rounded-xl hover:bg-red-50 transition border text-xs">
+            <div class="w-10 h-10 ${c.color || 'bg-mcuRed'} text-white rounded-lg flex items-center justify-center text-base"><i class="fa-solid ${c.icon || 'fa-link'}"></i></div>
             <div>
                 <h4 class="font-bold text-gray-800">${c.title}</h4>
-                <p class="text-xs text-gray-500">${c.subtitle}</p>
+                <p class="text-[11px] text-gray-500">${c.subtitle}</p>
             </div>
         </a>
     `).join('');
 
     if (adminList) {
         adminList.innerHTML = appData.contacts.map(c => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
                 <div>
-                    <span class="font-medium text-sm text-gray-800 block">${c.title} (${c.subtitle})</span>
-                    <span class="text-xs text-gray-500">ลิงก์: ${c.link}</span>
+                    <span class="font-medium text-gray-800 block">${c.title} (${c.subtitle})</span>
+                    <span class="text-[11px] text-gray-500">ลิงก์: ${c.link}</span>
                 </div>
-                <div class="space-x-2">
-                    <button onclick="openContactModal('${c.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm font-semibold">แก้ไข</button>
-                    <button onclick="deleteItem('contacts', '${c.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded text-sm font-semibold">ลบ</button>
+                <div class="space-x-1.5">
+                    <button onclick="openContactModal('${c.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
+                    <button onclick="deleteItem('contacts', '${c.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
             </div>
         `).join('');
@@ -306,23 +369,23 @@ function renderCurriculums() {
     const adminList = document.getElementById('admin-curriculums-list');
 
     grid.innerHTML = appData.curriculums.map(item => `
-        <div class="bg-white p-6 rounded-xl shadow border-t-4 border-mcuRed">
-            <h3 class="font-bold text-xl text-gray-900 mb-2">${item.name}</h3>
-            <p class="text-gray-600 text-sm mb-4">${item.detail}</p>
-            <span class="text-xs bg-red-100 text-mcuRed px-3 py-1 rounded-full font-semibold">${item.badge}</span>
+        <div class="bg-white p-5 rounded-xl shadow-sm border-t-4 border-mcuRed text-xs">
+            <h3 class="font-bold text-sm text-gray-900 mb-1.5">${item.name}</h3>
+            <p class="text-gray-600 text-xs mb-3 line-clamp-3">${item.detail}</p>
+            <span class="text-[10px] bg-red-50 text-mcuRed px-2.5 py-0.5 rounded-full font-semibold">${item.badge}</span>
         </div>
     `).join('');
 
     if (adminList) {
         adminList.innerHTML = appData.curriculums.map(item => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
                 <div>
-                    <span class="font-medium text-sm text-gray-800 block">${item.name}</span>
-                    <span class="text-xs text-gray-500">${item.detail}</span>
+                    <span class="font-medium text-gray-800 block">${item.name}</span>
+                    <span class="text-[11px] text-gray-500 line-clamp-1">${item.detail}</span>
                 </div>
-                <div class="space-x-2">
-                    <button onclick="openCurriculumModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm font-semibold">แก้ไข</button>
-                    <button onclick="deleteItem('curriculums', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded text-sm font-semibold">ลบ</button>
+                <div class="space-x-1.5">
+                    <button onclick="openCurriculumModal('${item.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
+                    <button onclick="deleteItem('curriculums', '${item.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
             </div>
         `).join('');
@@ -335,23 +398,23 @@ function renderFaqs() {
 
     tbody.innerHTML = appData.faqs.map((faq, index) => `
         <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm text-gray-800">
-                <strong class="block mb-1">${index + 1}. ${faq.question}</strong>
-                <span class="text-gray-500 italic text-xs block">${faq.answer}</span>
+            <td class="px-4 py-3 text-xs text-gray-800">
+                <strong class="block mb-0.5">${index + 1}. ${faq.question}</strong>
+                <span class="text-gray-500 italic text-[11px] block">${faq.answer}</span>
             </td>
         </tr>
     `).join('');
 
     if (adminList) {
         adminList.innerHTML = appData.faqs.map(faq => `
-            <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+            <div class="p-3 flex items-center justify-between hover:bg-gray-50 text-xs">
                 <div>
-                    <span class="font-medium text-sm text-gray-800 block">${faq.question}</span>
-                    <span class="text-xs text-gray-500 italic">${faq.answer}</span>
+                    <span class="font-medium text-gray-800 block">${faq.question}</span>
+                    <span class="text-[11px] text-gray-500 italic">${faq.answer}</span>
                 </div>
-                <div class="space-x-2 flex items-center">
-                    <button onclick="openFaqModal('${faq.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm font-semibold">แก้ไข</button>
-                    <button onclick="deleteItem('faqs', '${faq.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded text-sm font-semibold">ลบ</button>
+                <div class="space-x-1.5 flex items-center">
+                    <button onclick="openFaqModal('${faq.id}')" class="text-blue-600 bg-blue-50 px-2 py-1 rounded font-semibold">แก้ไข</button>
+                    <button onclick="deleteItem('faqs', '${faq.id}')" class="text-red-600 bg-red-50 px-2 py-1 rounded font-semibold">ลบ</button>
                 </div>
             </div>
         `).join('');
@@ -393,7 +456,7 @@ auth.onAuthStateChanged((user) => {
         isAdminLoggedIn = true;
         if (authBtn) {
             authBtn.innerHTML = `<i class="fa-solid fa-user-shield"></i> <span>หลังบ้าน (${user.email})</span>`;
-            authBtn.className = "bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow transition flex items-center space-x-2 text-sm font-medium";
+            authBtn.className = "bg-green-700 hover:bg-green-800 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center space-x-1.5 text-xs font-medium";
         }
         adminActions.forEach(id => {
             const el = document.getElementById(id);
@@ -403,7 +466,7 @@ auth.onAuthStateChanged((user) => {
         isAdminLoggedIn = false;
         if (authBtn) {
             authBtn.innerHTML = `<i class="fa-solid fa-lock"></i> <span>ล็อกอินแอดมิน</span>`;
-            authBtn.className = "bg-mcuRed hover:bg-red-900 text-white px-4 py-2 rounded-lg shadow transition flex items-center space-x-2 text-sm font-medium";
+            authBtn.className = "bg-mcuRed hover:bg-red-900 text-white px-3 py-1.5 rounded-lg shadow transition flex items-center space-x-1.5 text-xs font-medium";
         }
         adminActions.forEach(id => {
             const el = document.getElementById(id);
@@ -462,10 +525,10 @@ function openInfoSysModal(id = null) {
     document.getElementById('crud-modal-title').innerText = id ? 'แก้ไขระบบสารสนเทศ' : 'เพิ่มระบบสารสนเทศ';
     const item = id ? appData.infosys.find(i => i.id === id) : { title: '', desc: '', link: '', icon: 'fa-globe' };
     document.getElementById('crud-form-fields').innerHTML = `
-        <div><label class="block text-xs font-semibold mb-1">ชื่อระบบ</label><input type="text" id="is-title" required value="${item.title || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">คำอธิบายสั้น</label><input type="text" id="is-desc" required value="${item.desc || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">ลิงก์เว็บไซต์ (URL)</label><input type="url" id="is-link" required value="${item.link || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">FontAwesome Icon (เช่น fa-award)</label><input type="text" id="is-icon" required value="${item.icon || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
+        <div><label class="block font-semibold mb-0.5">ชื่อระบบ</label><input type="text" id="is-title" required value="${item.title || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">คำอธิบายสั้น</label><input type="text" id="is-desc" required value="${item.desc || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">ลิงก์เว็บไซต์ (URL)</label><input type="url" id="is-link" required value="${item.link || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">FontAwesome Icon (เช่น fa-award)</label><input type="text" id="is-icon" required value="${item.icon || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
     `;
 }
 
@@ -476,9 +539,9 @@ function openNewsModal(id = null) {
     document.getElementById('crud-modal-title').innerText = id ? 'แก้ไขข่าวประชาสัมพันธ์' : 'เพิ่มข่าวประชาสัมพันธ์';
     const item = id ? appData.news.find(n => n.id === id) : { title: '', image: '', content: '' };
     document.getElementById('crud-form-fields').innerHTML = `
-        <div><label class="block text-xs font-semibold mb-1">หัวข้อข่าว</label><input type="text" id="news-title" required value="${item.title || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">ลิงก์รูปภาพ</label><input type="url" id="news-image" required value="${item.image || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">เนื้อหาข่าวรายละเอียด</label><textarea id="news-content" required class="w-full px-3 py-2 border rounded text-sm h-32">${item.content || ''}</textarea></div>
+        <div><label class="block font-semibold mb-0.5">หัวข้อข่าว</label><input type="text" id="news-title" required value="${item.title || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">ลิงก์รูปภาพ</label><input type="url" id="news-image" required value="${item.image || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">เนื้อหาข่าวรายละเอียด</label><textarea id="news-content" required class="w-full px-3 py-1.5 border rounded text-xs h-28">${item.content || ''}</textarea></div>
     `;
 }
 
@@ -489,11 +552,11 @@ function openScholarshipModal(id = null) {
     document.getElementById('crud-modal-title').innerText = id ? 'แก้ไขทุนการศึกษา' : 'เพิ่มทุนการศึกษา';
     const item = id ? appData.scholarships.find(s => s.id === id) : { name: '', source: '', detail: '', image: '', link: '' };
     document.getElementById('crud-form-fields').innerHTML = `
-        <div><label class="block text-xs font-semibold mb-1">ชื่อทุน</label><input type="text" id="sch-name" required value="${item.name || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">แหล่งทุน</label><input type="text" id="sch-source" required value="${item.source || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">รายละเอียด</label><textarea id="sch-detail" required class="w-full px-3 py-2 border rounded text-sm">${item.detail || ''}</textarea></div>
-        <div><label class="block text-xs font-semibold mb-1">ลิงก์รูปภาพ</label><input type="url" id="sch-image" required value="${item.image || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">ลิงก์รายละเอียดทุน</label><input type="url" id="sch-link" required value="${item.link || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
+        <div><label class="block font-semibold mb-0.5">ชื่อทุน</label><input type="text" id="sch-name" required value="${item.name || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">แหล่งทุน</label><input type="text" id="sch-source" required value="${item.source || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">รายละเอียด</label><textarea id="sch-detail" required class="w-full px-3 py-1.5 border rounded text-xs">${item.detail || ''}</textarea></div>
+        <div><label class="block font-semibold mb-0.5">ลิงก์รูปภาพ</label><input type="url" id="sch-image" required value="${item.image || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">ลิงก์รายละเอียดทุน</label><input type="url" id="sch-link" required value="${item.link || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
     `;
 }
 
@@ -504,9 +567,9 @@ function openAdvisorModal(id = null) {
     document.getElementById('crud-modal-title').innerText = id ? 'แก้ไขข้อมูลอาจารย์' : 'เพิ่มข้อมูลอาจารย์';
     const item = id ? appData.advisors.find(a => a.id === id) : { name: '', title: '', image: '' };
     document.getElementById('crud-form-fields').innerHTML = `
-        <div><label class="block text-xs font-semibold mb-1">ชื่อ-นามสกุล (พร้อมตำแหน่ง)</label><input type="text" id="adv-name" required value="${item.name || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">ตำแหน่งหน้าที่</label><input type="text" id="adv-title" required value="${item.title || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">ลิงก์รูปภาพอาจารย์</label><input type="url" id="adv-image" required value="${item.image || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
+        <div><label class="block font-semibold mb-0.5">ชื่อ-นามสกุล (พร้อมตำแหน่ง)</label><input type="text" id="adv-name" required value="${item.name || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">ตำแหน่งหน้าที่</label><input type="text" id="adv-title" required value="${item.title || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">ลิงก์รูปภาพอาจารย์</label><input type="url" id="adv-image" required value="${item.image || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
     `;
 }
 
@@ -517,10 +580,10 @@ function openContactModal(id = null) {
     document.getElementById('crud-modal-title').innerText = id ? 'แก้ไขช่องทางติดต่อ' : 'เพิ่มช่องทางติดต่อ';
     const item = id ? appData.contacts.find(c => c.id === id) : { title: '', subtitle: '', link: '', icon: 'fa-globe' };
     document.getElementById('crud-form-fields').innerHTML = `
-        <div><label class="block text-xs font-semibold mb-1">ชื่อช่องทาง (เช่น Facebook)</label><input type="text" id="con-title" required value="${item.title || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">รายละเอียดข้อความ (เช่น @mcu.cyp)</label><input type="text" id="con-subtitle" required value="${item.subtitle || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">ลิงก์ URL</label><input type="url" id="con-link" required value="${item.link || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">FontAwesome Icon</label><input type="text" id="con-icon" required value="${item.icon || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
+        <div><label class="block font-semibold mb-0.5">ชื่อช่องทาง (เช่น Facebook)</label><input type="text" id="con-title" required value="${item.title || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">รายละเอียดข้อความ (เช่น @mcu.cyp)</label><input type="text" id="con-subtitle" required value="${item.subtitle || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">ลิงก์ URL</label><input type="url" id="con-link" required value="${item.link || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">FontAwesome Icon</label><input type="text" id="con-icon" required value="${item.icon || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
     `;
 }
 
@@ -531,9 +594,9 @@ function openCurriculumModal(id = null) {
     document.getElementById('crud-modal-title').innerText = id ? 'แก้ไขหลักสูตร' : 'เพิ่มหลักสูตร';
     const item = id ? appData.curriculums.find(c => c.id === id) : { name: '', detail: '', badge: 'ปริญญาตรี 4 ปี' };
     document.getElementById('crud-form-fields').innerHTML = `
-        <div><label class="block text-xs font-semibold mb-1">ชื่อหลักสูตร</label><input type="text" id="cur-name" required value="${item.name || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">รายละเอียดหลักสูตร</label><textarea id="cur-detail" required class="w-full px-3 py-2 border rounded text-sm">${item.detail || ''}</textarea></div>
-        <div><label class="block text-xs font-semibold mb-1">ป้ายกำกับระยะเวลา (Badge)</label><input type="text" id="cur-badge" required value="${item.badge || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
+        <div><label class="block font-semibold mb-0.5">ชื่อหลักสูตร</label><input type="text" id="cur-name" required value="${item.name || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">รายละเอียดหลักสูตร</label><textarea id="cur-detail" required class="w-full px-3 py-1.5 border rounded text-xs">${item.detail || ''}</textarea></div>
+        <div><label class="block font-semibold mb-0.5">ป้ายกำกับระยะเวลา (Badge)</label><input type="text" id="cur-badge" required value="${item.badge || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
     `;
 }
 
@@ -544,8 +607,8 @@ function openFaqModal(id = null) {
     document.getElementById('crud-modal-title').innerText = id ? 'แก้ไข FAQ' : 'เพิ่ม FAQ';
     const item = id ? appData.faqs.find(f => f.id === id) : { question: '', answer: '' };
     document.getElementById('crud-form-fields').innerHTML = `
-        <div><label class="block text-xs font-semibold mb-1">คำถาม</label><input type="text" id="faq-q" required value="${item.question || ''}" class="w-full px-3 py-2 border rounded text-sm"></div>
-        <div><label class="block text-xs font-semibold mb-1">คำตอบ (แสดงเป็นตัวเอียง)</label><textarea id="faq-a" required class="w-full px-3 py-2 border rounded text-sm italic">${item.answer || ''}</textarea></div>
+        <div><label class="block font-semibold mb-0.5">คำถาม</label><input type="text" id="faq-q" required value="${item.question || ''}" class="w-full px-3 py-1.5 border rounded text-xs"></div>
+        <div><label class="block font-semibold mb-0.5">คำตอบ (แสดงเป็นตัวเอียง)</label><textarea id="faq-a" required class="w-full px-3 py-1.5 border rounded text-xs italic">${item.answer || ''}</textarea></div>
     `;
 }
 
@@ -589,6 +652,11 @@ function handleCrudSubmit(e) {
         dataToSave.answer = document.getElementById('faq-a').value;
     }
 
+    if (!id) {
+        // เพิ่มฟิลด์ timestamp สำหรับการเรียงลำดับ "ลงก่อนอยู่แรก"
+        dataToSave.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+
     if (id) {
         db.collection(type).doc(id).update(dataToSave).then(() => {
             closeCrudModal();
@@ -612,7 +680,7 @@ function deleteItem(type, id) {
 
 // Initialize App
 window.addEventListener('DOMContentLoaded', () => {
-    seedDefaultDataIfNeeded(); // ทำการสร้างข้อมูลเริ่มต้นลง Firestore หากยังไม่มี
+    seedDefaultDataIfNeeded();
     initFirestoreListeners();
     initCounters();
 });
