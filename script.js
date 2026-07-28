@@ -1,13 +1,14 @@
 // ==================== CONFIG FIREBASE ====================
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBvSFA34Hab8psnXJUExO4pajga-13e5Cs",
+  authDomain: "mcu-cyp-education.firebaseapp.com",
+  projectId: "mcu-cyp-education",
+  storageBucket: "mcu-cyp-education.firebasestorage.app",
+  messagingSenderId: "547877876364",
+  appId: "1:547877876364:web:447cb02f7ec911ccf641a9",
+  measurementId: "G-5S3EYHL149"
 };
-
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
